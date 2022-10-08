@@ -1,11 +1,11 @@
 import axios from 'axios'
 import { ElNotification , ElMessageBox, ElMessage, ElLoading } from 'element-plus'
-import store from '@/store'
 import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
 import { tansParams, blobValidate } from '@/utils/ruoyi'
 import cache from '@/plugins/cache'
 import { saveAs } from 'file-saver'
+import useUserStore from '@/store/modules/user'
 
 let downloadLoadingInstance;
 // 是否显示重新登录
@@ -85,7 +85,7 @@ service.interceptors.response.use(res => {
         }
       ).then(() => {
         isRelogin.show = false;
-        store.dispatch('LogOut').then(() => {
+        useUserStore().logOut().then(() => {
           location.href = '/index';
         })
       }).catch(() => {
@@ -130,12 +130,13 @@ service.interceptors.response.use(res => {
 )
 
 // 通用下载方法
-export function download(url, params, filename) {
+export function download(url, params, filename, config) {
   downloadLoadingInstance = ElLoading.service({ text: "正在下载数据，请稍候", background: "rgba(0, 0, 0, 0.7)", })
   return service.post(url, params, {
     transformRequest: [(params) => { return tansParams(params) }],
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    responseType: 'blob'
+    responseType: 'blob',
+    ...config
   }).then(async (data) => {
     const isLogin = await blobValidate(data);
     if (isLogin) {

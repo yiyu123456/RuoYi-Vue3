@@ -115,36 +115,32 @@
          </el-table-column>
          <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
             <template #default="scope">
-              <el-tooltip content="修改" placement="top">
+              <el-tooltip content="修改" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button
-                  v-if="scope.row.roleId !== 1"
                   type="text"
                   icon="Edit"
                   @click="handleUpdate(scope.row)"
                   v-hasPermi="['system:role:edit']"
                 ></el-button>
               </el-tooltip>
-              <el-tooltip content="删除" placement="top">
+              <el-tooltip content="删除" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button
-                  v-if="scope.row.roleId !== 1"
                   type="text"
                   icon="Delete"
                   @click="handleDelete(scope.row)"
                   v-hasPermi="['system:role:remove']"
                 ></el-button>
               </el-tooltip>
-              <el-tooltip content="数据权限" placement="top">
+              <el-tooltip content="数据权限" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button
-                  v-if="scope.row.roleId !== 1"
                   type="text"
                   icon="CircleCheck"
                   @click="handleDataScope(scope.row)"
                   v-hasPermi="['system:role:edit']"
                 ></el-button>
               </el-tooltip>
-              <el-tooltip content="分配用户" placement="top">
+              <el-tooltip content="分配用户" placement="top" v-if="scope.row.roleId !== 1">
                 <el-button
-                  v-if="scope.row.roleId !== 1"
                   type="text"
                   icon="User"
                   @click="handleAuthUser(scope.row)"
@@ -173,7 +169,7 @@
                <template #label>
                   <span>
                      <el-tooltip content="控制器中定义的权限字符，如：@PreAuthorize(`@ss.hasRole('admin')`)" placement="top">
-                        <i class="el-icon-question"></i>
+                        <el-icon><question-filled /></el-icon>
                      </el-tooltip>
                      权限字符
                   </span>
@@ -266,9 +262,8 @@
 </template>
 
 <script setup name="Role">
-import { addRole, changeRoleStatus, dataScope, delRole, getRole, listRole, updateRole } from "@/api/system/role";
+import { addRole, changeRoleStatus, dataScope, delRole, getRole, listRole, updateRole, deptTreeSelect } from "@/api/system/role";
 import { roleMenuTreeselect, treeselect as menuTreeselect } from "@/api/system/menu";
-import { treeselect as deptTreeselect, roleDeptTreeselect } from "@/api/system/dept";
 
 const router = useRouter();
 const { proxy } = getCurrentInstance();
@@ -466,8 +461,8 @@ function getRoleMenuTreeselect(roleId) {
   });
 }
 /** 根据角色ID查询部门树结构 */
-function getRoleDeptTreeselect(roleId) {
-  return roleDeptTreeselect(roleId).then(response => {
+function getDeptTree(roleId) {
+  return deptTreeSelect(roleId).then(response => {
     deptOptions.value = response.depts;
     return response;
   });
@@ -547,12 +542,12 @@ function dataScopeSelectChange(value) {
 /** 分配数据权限操作 */
 function handleDataScope(row) {
   reset();
-  const roleDeptTreeselect = getRoleDeptTreeselect(row.roleId);
+  const deptTreeSelect = getDeptTree(row.roleId);
   getRole(row.roleId).then(response => {
     form.value = response.data;
     openDataScope.value = true;
     nextTick(() => {
-      roleDeptTreeselect.then(res => {
+      deptTreeSelect.then(res => {
         nextTick(() => {
           if (deptRef.value) {
             deptRef.value.setCheckedKeys(res.checkedKeys);
